@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "https;//github.com/awojciak/Minesweeper/precache-manifest.3207aaf711ef7c70e4c8f671df67a60e.js"
+  "/Minesweeper/precache-manifest.9947e73be52a27607e42c074930922b4.js"
 );
 
 workbox.clientsClaim();
@@ -28,7 +28,7 @@ self.__precacheManifest = [].concat(self.__precacheManifest || []);
 workbox.precaching.suppressWarnings();
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {});
 
-workbox.routing.registerNavigationRoute("https;//github.com/awojciak/Minesweeper/index.html", {
+workbox.routing.registerNavigationRoute("/Minesweeper/index.html", {
   
   blacklist: [/^\/_/,/\/[^\/]+\.[^\/]+$/],
 });
