@@ -1,41 +1,54 @@
-.board {
-  width: 500px;
+.Board{
+	width: 500px;
   height: 500px;
   display: flex;
   flex-direction: row;
 }
-
-.board-row {
-	display: block;
+.row{
+	display:block;
+	height: 50px;
 	width: 500px;
-	height: 125px;
 }
 
-.square {
-	width: 125px;
-	height: 125px;
+.unmarkedField{
 	display: inline;
-	border: 1px solid #f00;
+	width: 50px;
+	height: 50px;
+	font-size: 30px;
 	background: #fff;
-	float: left;
-	font-size: 80px;
-	font-weight: bold;
+  border: 1px solid #999;
+  float: left;
+  font-weight: bold;
   margin-right: -1px;
   margin-top: -1px;
   padding: 0;
   text-align: center;
+  border-radius: 25%;
 }
 
-.blankSquare {
-	width: 125px;
-	height: 125px;
+.markedField{
 	display: inline;
-	border: 1px solid #f00;
-	background: #000;
-	float: left;
+	width: 50px;
+	height: 50px;
+	font-size: 30px;
+	background: #ff0;
+  border: 1px solid #999;
+  float: left;
+  font-weight: bold;
   margin-right: -1px;
   margin-top: -1px;
   padding: 0;
+  text-align: center;
+  border-radius: 25%;
+}
+
+.overtop {
+	display: flex;
+	text-align: center;
+	width: 500px;
+	height: 50px;
+	justify-content: center;
+	align-items: center;
 }
 
 .top {
@@ -46,10 +59,11 @@
 	justify-content: center;
 	align-items: center;
 	border: 1px solid blue;
+	margin-bottom: 10px;
 }
 
-.banner {
-	display: inline-flex;
+#banner {
+	display: flex;
 	text-align: center;
 	width: 300px;
 	height: 100px;
@@ -57,8 +71,8 @@
 	align-items: center;
 }
 
-.newgame {
-	display: inline-flex;
+#time {
+	display: flex;
 	text-align: center;
 	width: 200px;
 	height: 100px;
@@ -66,8 +80,16 @@
 	align-items: center;
 }
 
-h1 {
-	font-size: 25px;
+.timer {
+	display: inline-flex;
+	text-align: center;
+	width: 150px;
+	height: 75px;
+	justify-content: center;
+	align-items: center;
+	font-size: 50px;
+	background-color: #000;
+	color: #0f0;
 }
 
 .refresh {

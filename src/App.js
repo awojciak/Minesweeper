@@ -1,84 +1,76 @@
 import React, { Component } from 'react';
 import './App.css';
 
-function Square(props)
+function Field(props)
 {
 	let nameOfClass;
-	if(props.number === null)
+	if(props.marked === true)
 	{
-		nameOfClass = "blankSquare";
+		nameOfClass = "markedField";
 	}
 	else
 	{
-		nameOfClass = "square";
-	}
+		nameOfClass = "unmarkedField";
+	}		
+		return (
+			<button className={nameOfClass} onClick={props.onClick} onContextMenu={props.onContextMenu}>
+				{props.value}
+			</button>
+		)
+}
+
+function Timer(props)
+{
 	return (
-		<button className={nameOfClass} id={props.id} onClick={props.onClick}>
-			{props.number}
-		</button>
+		<div className="timer">
+			{props.time}
+		</div>
 	);
 }
 
 class Board extends Component
 {
-	newSquare(num)
+	newField(num)
 	{
-		return (
-			<Square
-				id={this.props.id[num]} 
-				onClick={() => {this.props.onClick(num)}} 
-				number={this.props.numbers[num]} 
-			/>
-		);
+		return ( <Field 
+			marked={this.props.marked[num]} 
+			value={this.props.fields[num]} 
+			onClick={() => this.props.onClick(num)} 
+			onContextMenu={(e) => {this.props.onContextMenu(num, e)}} 
+		/> );
 	}
 	
 	render()
 	{
-		let rows = [];
-		for(let i = 0; i < 4; i++)
+		const board = [];
+		for(let i = 0; i < 10; i++)
 		{
-			let newRow = [];
-			for(let j = 0; j < 4; j++)
+			let row = [];
+			for(let j = 0; j < 10; j++)
 			{
-				newRow.push(this.newSquare(4*j+i));
+				row.push(this.newField((i*10)+j));
 			}
-			rows.push(<div className="board-row">{newRow}</div>);
+			board.push(<div className="row">{row}</div>);
 		}
-		return (
-			<div className="board">
-				{rows}
-			</div>
-		);
+		return <div>{board}</div>;
 	}
 }
 
-function doArray(size)
-{
-	let newArray = Array(size).fill(null);
-	for(let i = 0; i < size; i++)
+function arrayFilled(size)
 	{
-		newArray[i] = i+1;
-	}
-	return newArray;
-}
-
-function doRandomArray(size)
-{
-	let randomArray = Array(size).fill(null);
-	let czy = Array(size).fill(false)
-	let i = 0;
-	while(i !== size-1)
-	{
-		let rand = Math.floor(Math.random()*size);
-		if(czy[rand] === false && rand !== size && rand !== 0)
+		let bombs = Array(size).fill(false);
+		let tmp = 15;
+		while(tmp !== 0)
 		{
-			randomArray[i] = rand;
-			czy[rand] = true;
-			i++;
+			let position = Math.floor(Math.random()*99);
+			if(!bombs[position])
+			{
+				tmp--;
+				bombs[position] = true;
+			}
 		}
+		return bombs;
 	}
-	return randomArray;
-}
 
 function Refresh(props)
 {
@@ -87,20 +79,44 @@ function Refresh(props)
 			Nowa gra
 		</button>
 	);
-}
-
+}	
+	
 class App extends Component {
 	constructor(props)
 	{
 		super(props);
 		this.state = {
-			id: doArray(16),
-			numbers: doRandomArray(16),
-			sign: 'Gra ciągle trwa',
-			trwa: true,
-			moves: 0,
-		};
+			fields: Array(100).fill(true),
+			marks: 15,
+			clicked: Array(100).fill(false),
+			bombs: arrayFilled(100),
+			marked: Array(100).fill(false),
+			counter: 0,
+			stat: true,
+			banner: 'Póki co żyjesz',
+			time: 0,
+		}
 		this.clickHandler = this.clickHandler.bind(this);
+		this.contextMenuHandler = this.contextMenuHandler.bind(this);
+	}
+	
+	componentDidMount() {
+		this.timerID = setInterval(() => this.tick(), 1000);
+	}
+	
+	componentWillUnmount() {
+		clearInterval(this.timerID);
+	}
+	
+	tick() {
+		let time = this.state.time + 1;
+		if(this.state.stat === false)
+		{
+			return;
+		}
+		this.setState({
+			time: time
+		});
 	}
 	
 	refreshHandler()
@@ -110,84 +126,156 @@ class App extends Component {
 	
 	clickHandler(i)
 	{
-		let numbers = this.state.numbers;
-		let sign = this.state.sign;
-		let trwa = this.state.trwa;
-		let moves = this.state.moves;
-		
-		if(trwa === false)
+		let clicked = this.state.clicked;
+		let fields = this.state.fields;
+		let counter = this.state.counter;
+		let stat = this.state.stat;
+		let banner = this.state.banner;
+		if(clicked[i] || !stat)
 		{
 			return;
 		}
 		
-		if(i%4 !== 0 && numbers[i-1] === null)
+		if(this.state.marked[i] === false && this.state.bombs[i] === false)
 		{
-			numbers[i-1] = numbers[i];
-			numbers[i] = null;
-			moves++;
-		}
-		if(i%4 !== 3 && numbers[i+1] === null)
-		{
-			numbers[i+1] = numbers[i];
-			numbers[i] = null;
-			moves++;
-		}
-		if(i-4 >= 0 && numbers[i-4] === null)
-		{
-			numbers[i-4] = numbers[i];
-			numbers[i] = null;
-			moves++;
-		}
-		if(i+4 <= 15 && numbers[i+4] === null)
-		{
-			numbers[i+4] = numbers[i];
-			numbers[i] = null;
-			moves++;
-		}
-		
-		let czy = true;
-		
-		for(let j = 0; j < 15; j++)
-		{
-			if(numbers[j] !== this.state.id[j])
+			let neighborBombs = 0;
+			if(i-10 >= 0 && this.state.bombs[i-10] === true)
 			{
-				czy = false;
-				break;
+				neighborBombs++;
 			}
+			if(i+10 <= 99 && this.state.bombs[i+10] === true)
+			{
+				neighborBombs++;
+			}
+			
+			if(i%10 !== 0 && this.state.bombs[i-1] === true)
+			{
+				neighborBombs++;
+			}
+			if(i%10 !== 9 && this.state.bombs[i+1] === true)
+			{
+				neighborBombs++;
+			}
+			
+			if(i%10 !== 0 && i-11 >= 0 && this.state.bombs[i-11] === true)
+			{
+				neighborBombs++;
+			}
+			if(i%10 !== 9 && i+11 <= 99 && this.state.bombs[i+11] === true)
+			{
+				neighborBombs++;
+			}
+			
+			if(i%10 !== 9 && i-9 >= 0 && this.state.bombs[i-9] === true)
+			{
+				neighborBombs++;
+			}
+			if(i%10 !== 0 && i+9 <= 99 && this.state.bombs[i+9] === true)
+			{
+				neighborBombs++;
+			}
+			
+			fields[i] = neighborBombs;
+			clicked[i] = true;
+			counter++;
+		}
+		else if(this.state.marked[i] === false && this.state.bombs[i] === true)
+		{
+			stat = false;
+			clicked[i] = true;
+			fields[i] = '#';
+			counter++;
+			banner = 'Bardzo się starałeś, lecz grę przerypałeś'
 		}
 		
-		if(czy === true)
+		if(counter === 100)
 		{
-			sign = 'Koniec!'
-			trwa = false;
+			banner = 'Brawo! Zwycięstwo!';
+			stat = false;
 		}
 		
 		this.setState({
-			numbers: numbers,
-			sign: sign,
-			trwa: trwa,
-			moves: moves
+			fields: fields,
+			clicked: clicked,
+			counter: counter,
+			stat: stat,
+			banner: banner,
 		});
+	}
+	
+	contextMenuHandler(i, e)
+	{
+		e.preventDefault();
+		let clicked = this.state.clicked;
+		let marked = this.state.marked;
+		let counter = this.state.counter;
+		let marks = this.state.marks;
+		let banner = this.state.banner;
+		let stat = this.state.stat;
+		
+		if(clicked[i] && !marked[i] && this.state.fields !== null){
+			return;
+		}
+		
+		if(!stat)
+		{
+			return;
+		}
+		
+		if(!marked[i] && marks > 0)
+		{
+			marked[i] = true;
+			clicked[i] = true;
+			counter++;
+			marks--;
+		}
+		else if(marked[i])
+		{
+			marked[i] = false;
+			clicked[i] = false;
+			counter--;
+			marks++;
+		}
+		
+		if(counter === 100)
+		{
+			banner = 'Brawo! Zwycięstwo!';
+			stat = false;
+		}
+		
+		this.setState({
+			marked: marked,
+			clicked: clicked,
+			counter: counter,
+			marks: marks,
+			stat: stat,
+			banner: banner,
+		});
+		
+		return;
 	}
 	
   render() {
     return (
-		<div>
-			<div className="top">
-				<div className="banner">
-					<h1>{this.state.sign} <br />
-					Wykonane ruchy: {this.state.moves}</h1>
-				</div>
-				<div className="newgame">
-					<Refresh onClick={this.refreshHandler} />
-				</div>
-			</div>
-			<Board 
-				numbers={this.state.numbers} 
-				id={this.state.id} 
-				onClick={(i) => this.clickHandler(i)} 
-			/>
+	<div>
+		<div className="overtop">
+			<Refresh onClick={this.refreshHandler}/>
 		</div>
+		<div className="top">
+			<div id="banner">
+				{this.state.banner} <br /> Ilość znaczników do wykorzystania: {this.state.marks} <br />
+			</div>
+			<div id="time">
+				<Timer time={this.state.time}/>
+			</div>
+		</div>
+      <Board 
+		fields={this.state.fields} 
+		onClick={(i) => this.clickHandler(i)} 
+		onContextMenu={(i, e) => {this.contextMenuHandler(i, e)}} 
+		marked={this.state.marked} 
+	  />
+	</div>
     );
   }
 }
